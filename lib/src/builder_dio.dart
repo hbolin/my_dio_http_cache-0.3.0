@@ -3,43 +3,54 @@ import 'package:dio_http_cache/src/manager_dio.dart';
 
 /// try to get maxAge and maxStale from response headers.
 /// local settings will always overview the value get from service.
-Options buildServiceCacheOptions(
-        {Options? options,
-        Duration? maxStale,
-        String? primaryKey,
-        String? subKey,
-        bool? forceRefresh}) =>
+Options buildServiceCacheOptions({
+  Options? options,
+  Duration? maxStale,
+  String? primaryKey,
+  String? subKey,
+  bool? forceRefresh,
+  bool? isOnlyGetCache,
+}) =>
     buildConfigurableCacheOptions(
-        options: options,
-        maxStale: maxStale,
-        primaryKey: primaryKey,
-        subKey: subKey,
-        forceRefresh: forceRefresh);
+      options: options,
+      maxStale: maxStale,
+      primaryKey: primaryKey,
+      subKey: subKey,
+      forceRefresh: forceRefresh,
+      isOnlyGetCache: isOnlyGetCache,
+    );
 
 /// build a normal cache options
-Options buildCacheOptions(Duration maxAge,
-        {Duration? maxStale,
-        String? primaryKey,
-        String? subKey,
-        Options? options,
-        bool? forceRefresh}) =>
+Options buildCacheOptions(
+    Duration maxAge, {
+      Duration? maxStale,
+      String? primaryKey,
+      String? subKey,
+      Options? options,
+      bool? forceRefresh,
+      bool? isOnlyGetCache,
+    }) =>
     buildConfigurableCacheOptions(
-        maxAge: maxAge,
-        options: options,
-        primaryKey: primaryKey,
-        subKey: subKey,
-        maxStale: maxStale,
-        forceRefresh: forceRefresh);
+      maxAge: maxAge,
+      options: options,
+      primaryKey: primaryKey,
+      subKey: subKey,
+      maxStale: maxStale,
+      forceRefresh: forceRefresh,
+      isOnlyGetCache: isOnlyGetCache,
+    );
 
 /// if null==maxAge, will try to get maxAge and maxStale from response headers.
 /// local settings will always overview the value get from service.
-Options buildConfigurableCacheOptions(
-    {Options? options,
-    Duration? maxAge,
-    Duration? maxStale,
-    String? primaryKey,
-    String? subKey,
-    bool? forceRefresh}) {
+Options buildConfigurableCacheOptions({
+  Options? options,
+  Duration? maxAge,
+  Duration? maxStale,
+  String? primaryKey,
+  String? subKey,
+  bool? forceRefresh,
+  bool? isOnlyGetCache,
+}) {
   if (null == options) {
     options = Options();
     options.extra = {};
@@ -63,6 +74,9 @@ Options buildConfigurableCacheOptions(
   }
   if (null != forceRefresh) {
     options.extra!.addAll({DIO_CACHE_KEY_FORCE_REFRESH: forceRefresh});
+  }
+  if (null != isOnlyGetCache) {
+    options.extra!.addAll({DIO_CACHE_KEY_ONLY_GET_CACHE: isOnlyGetCache});
   }
   return options;
 }

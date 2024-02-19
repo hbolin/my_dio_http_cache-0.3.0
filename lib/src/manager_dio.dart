@@ -13,6 +13,7 @@ const DIO_CACHE_KEY_PRIMARY_KEY = "dio_cache_primary_key";
 const DIO_CACHE_KEY_SUB_KEY = "dio_cache_sub_key";
 const DIO_CACHE_KEY_FORCE_REFRESH = "dio_cache_force_refresh";
 const DIO_CACHE_HEADER_KEY_DATA_SOURCE = "dio_cache_header_key_data_source";
+const DIO_CACHE_KEY_ONLY_GET_CACHE = "dio_cache_only_get_cache";
 
 typedef _ParseHeadCallback = void Function(
     Duration? _maxAge, Duration? _maxStale);
@@ -44,6 +45,13 @@ class DioCacheManager {
     }
     if (true == options.extra[DIO_CACHE_KEY_FORCE_REFRESH]) {
       return handler.next(options);
+    }
+    if (true == options.extra[DIO_CACHE_KEY_ONLY_GET_CACHE]) {
+      var responseDataFromCache = await _pullFromCacheBeforeMaxStale(options);
+      if (null != responseDataFromCache) {
+        return handler.resolve(_buildResponse(responseDataFromCache, responseDataFromCache.statusCode, options), true);
+      }
+      return handler.reject(DioError(type: DioErrorType.unknown, message: 'This request has not cached data.', requestOptions: options, error: null));
     }
     var responseDataFromCache = await _pullFromCacheBeforeMaxAge(options);
     if (null != responseDataFromCache) {
@@ -81,7 +89,7 @@ class DioCacheManager {
     Headers? headers;
     if (null != obj.headers) {
       headers = Headers.fromMap((Map<String, List<dynamic>>.from(
-              jsonDecode(utf8.decode(obj.headers!))))
+          jsonDecode(utf8.decode(obj.headers!))))
           .map((k, v) => MapEntry(k, List<String>.from(v))));
     }
     if (null == headers) {
@@ -148,7 +156,7 @@ class DioCacheManager {
       Map<String, String?> parameters;
       try {
         parameters = HeaderValue.parse("${HttpHeaders.cacheControlHeader}: $cacheControl",
-                parameterSeparator: ",", valueSeparator: "=")
+            parameterSeparator: ",", valueSeparator: "=")
             .parameters;
         _maxAge = _tryGetDurationFromMap(parameters, "s-maxage");
         if (null == _maxAge) {
@@ -217,7 +225,7 @@ class DioCacheManager {
 
   /// delete local cache by primaryKey and optional subKey
   Future<bool> delete(String primaryKey,
-          {String? requestMethod, String? subKey}) =>
+      {String? requestMethod, String? subKey}) =>
       _manager.delete("${_getRequestMethod(requestMethod)}-$primaryKey",
           subKey: subKey);
 
@@ -231,16 +239,16 @@ class DioCacheManager {
 
   /// delete local cache when both primaryKey and subKey matched.
   Future<bool> deleteByPrimaryKeyAndSubKeyWithUri(Uri uri,
-          {String? requestMethod, String? subKey, dynamic data}) =>
+      {String? requestMethod, String? subKey, dynamic data}) =>
       delete(_getPrimaryKeyFromUri(uri),
           requestMethod: requestMethod,
           subKey: subKey ?? _getSubKeyFromUri(uri, data: data));
 
   Future<bool> deleteByPrimaryKeyAndSubKey(String path,
-          {String? requestMethod,
-          Map<String, dynamic>? queryParameters,
-          String? subKey,
-          dynamic data}) =>
+      {String? requestMethod,
+        Map<String, dynamic>? queryParameters,
+        String? subKey,
+        dynamic data}) =>
       deleteByPrimaryKeyAndSubKeyWithUri(
           _getUriByPath(_baseUrl, path,
               data: data, queryParameters: queryParameters),
@@ -260,10 +268,10 @@ class DioCacheManager {
       assert(baseUrl != null && baseUrl.length > 0);
     }
     return RequestOptions(
-            baseUrl: baseUrl,
-            path: path,
-            data: data,
-            queryParameters: queryParameters)
+        baseUrl: baseUrl,
+        path: path,
+        data: data,
+        queryParameters: queryParameters)
         .uri;
   }
 }
