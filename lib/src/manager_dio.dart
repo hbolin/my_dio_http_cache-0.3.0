@@ -51,12 +51,11 @@ class DioCacheManager {
       if (null != responseDataFromCache) {
         return handler.resolve(_buildResponse(responseDataFromCache, responseDataFromCache.statusCode, options), true);
       }
-      return handler.reject(DioError(type: DioErrorType.unknown, message: 'This request has not cached data.', requestOptions: options, error: null));
+      return handler.reject(DioError(type: DioErrorType.unknown, message: 'This request has not cached data.', requestOptions: options, error: null), true);
     }
     var responseDataFromCache = await _pullFromCacheBeforeMaxAge(options);
     if (null != responseDataFromCache) {
-      return handler.resolve(_buildResponse(
-          responseDataFromCache, responseDataFromCache.statusCode, options), true);
+      return handler.resolve(_buildResponse(responseDataFromCache, responseDataFromCache.statusCode, options), true);
     }
     return handler.next(options);
   }
@@ -75,9 +74,7 @@ class DioCacheManager {
     if ((e.requestOptions.extra[DIO_CACHE_KEY_TRY_CACHE] ?? false) == true) {
       var responseDataFromCache = await _pullFromCacheBeforeMaxStale(e.requestOptions);
       if (null != responseDataFromCache) {
-        var response = _buildResponse(responseDataFromCache,
-            responseDataFromCache.statusCode, e.requestOptions);
-
+        var response = _buildResponse(responseDataFromCache, responseDataFromCache.statusCode, e.requestOptions);
         return handler.resolve(response);
       }
     }
